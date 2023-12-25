@@ -14,7 +14,7 @@ pub enum Error {
     Flush(String),
 }
 
-pub trait StateDB: Send + 'static {
+pub trait StateDB {
     type StateAccount;
     fn fork(&self) -> Self;
     fn suicide(&mut self, address: &SH160) -> Result<(), Error>;

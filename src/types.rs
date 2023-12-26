@@ -1,6 +1,6 @@
 use std::prelude::v1::*;
 
-use eth_types::{HexBytes, SH160, SH256, SU256, StateAccountTrait};
+use eth_types::{HexBytes, StateAccountTrait, SH160, SH256, SU256, FetchStateResult};
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -12,6 +12,13 @@ pub enum Error {
     WithKey(String),
     CallRemoteFail(String),
     Flush(String),
+}
+
+#[derive(Debug, Default)]
+pub struct MissingState {
+    pub code: bool,
+    pub account: bool,
+    pub storages: Vec<SH256>,
 }
 
 pub trait StateDB {
@@ -35,6 +42,12 @@ pub trait StateDB {
     fn set_balance(&mut self, address: &SH160, val: SU256) -> Result<(), Error>;
     fn try_get_nonce(&mut self, address: &SH160) -> Option<u64>;
     fn get_account_basic(&mut self, address: &SH160) -> Result<(SU256, u64), Error>;
+    fn apply_states(&mut self, result: Vec<FetchStateResult>) -> Result<(), Error>;
+    fn check_missing_state(
+        &mut self,
+        address: &SH160,
+        storages: &[SH256],
+    ) -> Result<MissingState, Error>;
 }
 
 pub trait Trie {

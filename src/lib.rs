@@ -9,8 +9,5 @@ pub use cache::*;
 mod types;
 pub use types::*;
 
-mod trie_state;
-pub use trie_state::*;
-
 mod mem_store;
 pub use mem_store::*;

@@ -1,6 +1,6 @@
 use std::prelude::v1::*;
 
-use eth_types::{HexBytes, SH160, SH256, SU256};
+use eth_types::{HexBytes, SH160, SH256, SU256, StateAccountTrait};
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -15,7 +15,7 @@ pub enum Error {
 }
 
 pub trait StateDB {
-    type StateAccount;
+    type StateAccount: StateAccountTrait;
     fn fork(&self) -> Self;
     fn suicide(&mut self, address: &SH160) -> Result<(), Error>;
     fn get_state(&mut self, address: &SH160, index: &SH256) -> Result<SH256, Error>;

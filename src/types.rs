@@ -1,6 +1,7 @@
 use std::prelude::v1::*;
 
-use eth_types::{HexBytes, StateAccountTrait, SH160, SH256, SU256, FetchStateResult};
+use base::trace::AvgCounterResult;
+use eth_types::{FetchState, FetchStateResult, HexBytes, StateAccountTrait, SH160, SH256, SU256};
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -77,4 +78,83 @@ pub trait NodeDB {
     fn remove_staging_node(&mut self, node: &Arc<Self::Node>);
     fn staging(&mut self, node: Self::Node) -> Arc<Self::Node>;
     fn commit(&mut self) -> usize;
+}
+
+pub trait ProofFetcher {
+    fn fetch_proofs(&self, key: &[u8]) -> Result<Vec<HexBytes>, String>;
+    fn get_nodes(&self, node: &[SH256]) -> Result<Vec<HexBytes>, String>;
+}
+
+pub trait StateFetcher: ProofFetcher {
+    fn with_acc(&self, address: &SH160) -> Self;
+    fn get_block_hash(&self, number: u64) -> Result<SH256, Error>;
+    fn get_code(&self, address: &SH160) -> Result<HexBytes, Error>;
+    fn get_account(&self, address: &SH160) -> Result<(SU256, u64, HexBytes), Error>;
+    fn get_storage(&self, address: &SH160, key: &SH256) -> Result<SH256, Error>;
+    fn fork(&self) -> Self;
+    fn get_miss_usage(&self) -> AvgCounterResult;
+    fn prefetch_states(
+        &self,
+        list: &[FetchState],
+        with_proof: bool,
+    ) -> Result<Vec<FetchStateResult>, Error>;
+}
+
+pub type NoStateFetcher = ();
+
+impl ProofFetcher for NoStateFetcher {
+    fn fetch_proofs(&self, key: &[u8]) -> Result<Vec<HexBytes>, String> {
+        Err(format!("key not found for proofs: {:?}", key))
+    }
+
+    fn get_nodes(&self, node: &[SH256]) -> Result<Vec<HexBytes>, String> {
+        Err(format!("nodes not found: {:?}", node))
+    }
+}
+
+impl StateFetcher for NoStateFetcher {
+    fn fork(&self) -> Self {
+        ()
+    }
+
+    fn get_account(&self, address: &SH160) -> Result<(SU256, u64, HexBytes), Error> {
+        Err(Error::WithKey(format!("account[{:?}] not found", address)))
+    }
+
+    fn get_block_hash(&self, number: u64) -> Result<SH256, Error> {
+        Err(Error::WithKey(format!(
+            "block_hash[{:?}] not found",
+            number
+        )))
+    }
+
+    fn get_code(&self, address: &SH160) -> Result<HexBytes, Error> {
+        Err(Error::WithKey(format!(
+            "account code[{:?}] not found",
+            address
+        )))
+    }
+
+    fn get_miss_usage(&self) -> AvgCounterResult {
+        AvgCounterResult::default()
+    }
+
+    fn get_storage(&self, address: &SH160, key: &SH256) -> Result<SH256, Error> {
+        Err(Error::WithKey(format!(
+            "account storage[{:?} {:?}] not found",
+            address, key
+        )))
+    }
+
+    fn prefetch_states(
+        &self,
+        _list: &[FetchState],
+        _with_proof: bool,
+    ) -> Result<Vec<FetchStateResult>, Error> {
+        unimplemented!()
+    }
+
+    fn with_acc(&self, _address: &SH160) -> Self {
+        ()
+    }
 }

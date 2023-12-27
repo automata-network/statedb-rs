@@ -104,7 +104,7 @@ pub type NoStateFetcher = ();
 
 impl ProofFetcher for NoStateFetcher {
     fn fetch_proofs(&self, key: &[u8]) -> Result<Vec<HexBytes>, String> {
-        Err(format!("key not found for proofs: {:?}", key))
+        Err(format!("key not found for proofs: {:?}", HexBytes::from(key)))
     }
 
     fn get_nodes(&self, node: &[SH256]) -> Result<Vec<HexBytes>, String> {
